@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Afik17/GithubIssue/internal/controller/core"
 	"github.com/Afik17/GithubIssue/internal/controller/resources"
 	gh "github.com/Afik17/GithubIssue/internal/github"
 	"k8s.io/client-go/util/retry"
@@ -25,7 +26,7 @@ func Update(ctx context.Context, k8sClient client.Client, ghClient gh.IGitHub, g
 			return nil, fmt.Errorf("failed to fetch issue by number: %w", err)
 		}
 	} else {
-		existingIssue, err = ghClient.GetIssueByTitle(ctx, repoOwner, repoName, ghIssue.Spec.Title, "open")
+		existingIssue, err = ghClient.GetIssueByTitle(ctx, repoOwner, repoName, ghIssue.Spec.Title, core.IssueOpenState)
 		if err != nil {
 			return nil, fmt.Errorf("failed to search issue by title: %w", err)
 		}
@@ -46,7 +47,7 @@ func Update(ctx context.Context, k8sClient client.Client, ghClient gh.IGitHub, g
 			return err
 		}
 
-		if err := resources.EnsureGithubIssueNumberAnnotation(ctx, k8sClient, latestIssue, appliedIssue.Number); err != nil {
+		if err := resources.EnsureGithubIssueNumberAnnotation(ctx, latestIssue, appliedIssue.Number); err != nil {
 			return err
 		}
 

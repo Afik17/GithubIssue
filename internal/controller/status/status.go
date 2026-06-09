@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Afik17/GithubIssue/internal/controller/core"
 	gh "github.com/Afik17/GithubIssue/internal/github"
 
 	corev1 "k8s.io/api/core/v1"
@@ -49,7 +50,7 @@ func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1a
 		Message: githubissuev1alpha1.ConditionMsgIssueSync,
 	})
 
-	if appliedIssue.State == "open" {
+	if appliedIssue.State == core.IssueOpenState {
 		recorder.Eventf(ghIssue, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonIssueFound, "GitHub issue #%d is open", appliedIssue.Number)
 		meta.SetStatusCondition(&ghIssue.Status.Conditions, metav1.Condition{
 			Type:    githubissuev1alpha1.ConditionTypeIssueOpen,

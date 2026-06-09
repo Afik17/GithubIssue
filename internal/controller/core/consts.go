@@ -8,4 +8,5 @@ const (
 
 	GHIssueDeletionFinalizer = "githubissue.dana.io/finalizer"
 	AnnotationIssueNumber    = "githubissue.dana.io/issue-number"
+	IssueOpenState           = "open"
 )
