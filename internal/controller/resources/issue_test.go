@@ -216,7 +216,7 @@ var _ = Describe("EnsureGithubIssueNumberAnnotation", func() {
 	})
 
 	It("should set the issue number annotation on the resource", func() {
-		err := EnsureGithubIssueNumberAnnotation(context.Background(), nil, ghIssue, 99)
+		err := EnsureGithubIssueNumberAnnotation(context.Background(), ghIssue, 99)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ghIssue.GetAnnotations()).To(HaveKeyWithValue(core.AnnotationIssueNumber, "99"))
 	})
@@ -224,7 +224,7 @@ var _ = Describe("EnsureGithubIssueNumberAnnotation", func() {
 	It("should initialize annotations when they are nil", func() {
 		Expect(ghIssue.GetAnnotations()).To(BeNil())
 
-		err := EnsureGithubIssueNumberAnnotation(context.Background(), nil, ghIssue, 42)
+		err := EnsureGithubIssueNumberAnnotation(context.Background(), ghIssue, 42)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ghIssue.GetAnnotations()).NotTo(BeNil())
 		Expect(ghIssue.GetAnnotations()[core.AnnotationIssueNumber]).To(Equal("42"))
@@ -233,7 +233,7 @@ var _ = Describe("EnsureGithubIssueNumberAnnotation", func() {
 	It("should preserve existing annotations", func() {
 		ghIssue.SetAnnotations(map[string]string{"kubectl.kubernetes.io/last-applied-configuration": "{}"})
 
-		err := EnsureGithubIssueNumberAnnotation(context.Background(), nil, ghIssue, 5)
+		err := EnsureGithubIssueNumberAnnotation(context.Background(), ghIssue, 5)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ghIssue.GetAnnotations()).To(HaveKey("kubectl.kubernetes.io/last-applied-configuration"))
 		Expect(ghIssue.GetAnnotations()).To(HaveKeyWithValue(core.AnnotationIssueNumber, "5"))
