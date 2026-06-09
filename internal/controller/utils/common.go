@@ -2,42 +2,41 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 )
 
-// ParseRepoURL extracts the owner and repository name from a Git URL.
+var supportedProtocols = []string{"http", "https"}
+
 func ParseRepoURL(repoURL string) (string, string, error) {
-	repoURL = strings.TrimSpace(repoURL)
-	if repoURL == "" {
-		return "", "", errors.New("repository URL cannot be empty")
+	u, err := url.Parse(strings.TrimSpace(repoURL))
+	if err != nil {
+		return "", "", err
 	}
 
-	repoURL = strings.TrimSuffix(repoURL, "/")
-	repoURL = strings.TrimSuffix(repoURL, ".git")
-	repoURL = strings.TrimSuffix(repoURL, "/")
-
-	var path string
-
-	if strings.HasPrefix(repoURL, "http://") || strings.HasPrefix(repoURL, "https://") {
-		u, err := url.Parse(repoURL)
-		if err != nil {
-			return "", "", errors.New("failed to parse HTTPS URL")
+	// You must manually loop through the slice to find a match
+	isValid := false
+	for _, p := range supportedProtocols {
+		if u.Scheme == p {
+			isValid = true
+			break
 		}
-		path = u.Path
-	} else {
-		return "", "", errors.New("unsupported protocol: URL must start with http://, https://")
 	}
 
-	path = strings.TrimPrefix(path, "/")
+	if !isValid {
+		return "", "", fmt.Errorf("unsupported protocol %q", u.Scheme)
+	}
 
-	pathParts := strings.Split(path, "/")
-	if len(pathParts) != 2 {
+	path := strings.Trim(u.Path, "/")
+	path = strings.TrimSuffix(path, ".git")
+
+	parts := strings.Split(path, "/")
+	if len(parts) != 2 {
 		return "", "", errors.New("invalid repository path: expected format 'owner/repo'")
 	}
 
-	owner := pathParts[0]
-	repo := pathParts[1]
+	owner, repo := parts[0], parts[1]
 
 	if owner == "" || repo == "" {
 		return "", "", errors.New("repository owner and name cannot be empty")
