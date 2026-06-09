@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-logr/logr"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,18 +49,10 @@ func (r *GithubIssueReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Delete stage
 	if ghIssue.DeletionTimestamp != nil {
 		repoOwner, repoName, _ := utils.ParseRepoURL(ghIssue.Spec.Repo)
-		isGitHubIssueCleaned, err := handlers.HandleDelete(ctx, r.GithubManager, ghIssue, repoOwner, repoName)
+		err := handlers.HandleDelete(ctx, r.Client, r.GithubManager, ghIssue, repoOwner, repoName)
 		if err != nil {
 			logger.Error(err, "failed to cleanup GitHub issue during deletion")
 			return ctrl.Result{RequeueAfter: time.Second * core.RequeueIntervalSeconds}, nil
-		}
-		if isGitHubIssueCleaned {
-			logger.Info("GitHub issue cleaned up successfully, removing finalizer")
-			if err := finalizer.Remove(ctx, r.Client, ghIssue, core.GHIssueDeletionFinalizer); err != nil {
-				logger.Error(err, "failed to remove finalizer")
-				return ctrl.Result{}, err
-			}
-			return ctrl.Result{}, nil
 		}
 	}
 
@@ -74,23 +68,12 @@ func (r *GithubIssueReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	// Sync stage
 	repoOwner, repoName, _ := utils.ParseRepoURL(ghIssue.Spec.Repo)
-
 	issueNumberByAnnotation := resources.GetGithubIssueNumberByAnnotation(ctx, ghIssue)
 	appliedIssue, syncErr := handlers.Update(ctx, r.Client, r.GithubManager, ghIssue, repoOwner, repoName, issueNumberByAnnotation)
 	if syncErr != nil {
-		if err = status.UpdateStatus(ctx, r.Client, r.Recorder, ghIssue, appliedIssue, syncErr); err != nil {
-			logger.Error(err, "failed to update GithubIssue status")
-			return ctrl.Result{}, err
-		}
-		var ghSyncErr *gh.GitHubError
-		if errors.As(syncErr, &ghSyncErr) {
-			logger.Info("failed to sync GitHub Issue")
-			return ctrl.Result{}, nil
-		}
-
-		logger.Error(syncErr, "failed to sync Github Issue")
-		return ctrl.Result{}, fmt.Errorf("failed to sync GitHub issue: %w", syncErr)
+		return r.handleSyncError(ctx, logger, ghIssue, appliedIssue, syncErr)
 	}
+
 	if issueNumberByAnnotation != appliedIssue.Number {
 		logger.Info("Issue number annotation updated, requeuing for next reconciliation")
 		return ctrl.Result{}, nil
@@ -110,6 +93,24 @@ func (r *GithubIssueReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	logger.Info("Reconciliation completed")
 	return ctrl.Result{}, nil
+}
+
+// handleSyncError processes sync errors and updates the K8s status
+func (r *GithubIssueReconciler) handleSyncError(ctx context.Context, logger logr.Logger, ghIssue *githubissuev1alpha1.GithubIssue, appliedIssue *gh.Issue, syncErr error) (ctrl.Result, error) {
+	if err := status.UpdateStatus(ctx, r.Client, r.Recorder, ghIssue, appliedIssue, syncErr); err != nil {
+		logger.Error(err, "failed to update GithubIssue status")
+		return ctrl.Result{}, err
+	}
+
+	var ghSyncErr *gh.GitHubError
+	if errors.As(syncErr, &ghSyncErr) {
+		logger.Info("failed to sync GitHub Issue", "reason", ghSyncErr.Error())
+		return ctrl.Result{}, nil
+	}
+
+	// Handle unexpected infra errors
+	logger.Error(syncErr, "failed to sync Github Issue")
+	return ctrl.Result{}, fmt.Errorf("failed to sync GitHub issue: %w", syncErr)
 }
 
 // SetupWithManager sets up the controller with the Manager.
