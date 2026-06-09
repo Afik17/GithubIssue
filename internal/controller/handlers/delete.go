@@ -6,6 +6,7 @@ import (
 
 	githubissuev1alpha1 "github.com/Afik17/GithubIssue/api/v1alpha1"
 	"github.com/Afik17/GithubIssue/internal/controller/core"
+	"github.com/Afik17/GithubIssue/internal/controller/resources"
 	gh "github.com/Afik17/GithubIssue/internal/github"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -17,7 +18,7 @@ func HandleDelete(ctx context.Context, ghClient gh.IGitHub, ghIssue *githubissue
 	}
 
 	// If the issue was never created, just remove the finalizer on the next step
-	if ghIssue.Status.Number == 0 {
+	if resources.IsGithubIssueManaged(ctx, ghIssue) {
 		return true, nil
 	}
 

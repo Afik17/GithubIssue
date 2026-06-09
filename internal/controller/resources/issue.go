@@ -11,7 +11,6 @@ import (
 	githubissuev1alpha1 "github.com/Afik17/GithubIssue/api/v1alpha1"
 	"github.com/Afik17/GithubIssue/internal/controller/core"
 	gh "github.com/Afik17/GithubIssue/internal/github"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ApplyGithubIssue ensures the remote GitHub issue matches the K8s Spec using the internal domain struct.
@@ -31,7 +30,7 @@ func ApplyGithubIssue(ctx context.Context, ghClient gh.IGitHub, newIssue *github
 		Description: newIssue.Spec.Description,
 		Labels:      labels,
 		Assignees:   assignees,
-		State:       "open",
+		State:       core.IssueOpenState,
 	}
 
 	if existingIssue == nil {
@@ -63,7 +62,7 @@ func GetGithubIssueNumberByAnnotation(ctx context.Context, ghIssue *githubissuev
 	return 0
 }
 
-func EnsureGithubIssueNumberAnnotation(ctx context.Context, k8sClient client.Client, ghIssue *githubissuev1alpha1.GithubIssue, issueNumber int) error {
+func EnsureGithubIssueNumberAnnotation(ctx context.Context, ghIssue *githubissuev1alpha1.GithubIssue, issueNumber int) error {
 	annotations := ghIssue.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -73,11 +72,18 @@ func EnsureGithubIssueNumberAnnotation(ctx context.Context, k8sClient client.Cli
 	return nil
 }
 
+// IsGithubIssueManaged returns true if githubissue has issueNumber annotation
+func IsGithubIssueManaged(ctx context.Context, ghIssue *githubissuev1alpha1.GithubIssue) bool {
+	annotations := ghIssue.GetAnnotations()
+	_, exists := annotations[core.AnnotationIssueNumber]
+	return exists
+}
+
 // isGithubIssuesEqual compares the K8s Spec to the internal domain issue.
 func isGithubIssuesEqual(ghIssue *githubissuev1alpha1.GithubIssue, existingIssue *gh.Issue) bool {
 
 	// Compare states
-	if existingIssue.State != "open" {
+	if existingIssue.State != core.IssueOpenState {
 		return false
 	}
 
