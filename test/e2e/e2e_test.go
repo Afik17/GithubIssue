@@ -54,8 +54,8 @@ var _ = Describe("Manager", Ordered, func() {
 	// enforce the restricted security policy to the namespace, installing CRDs,
 	// and deploying the controller.
 	BeforeAll(func() {
-		if os.Getenv("GITHUB_TOKEN") == "" {
-			Skip("GITHUB_TOKEN must be set to run e2e tests; the controller exits on startup without it")
+		if os.Getenv("GH_TOKEN") == "" {
+			Skip("GH_TOKEN must be set to run e2e tests; the controller exits on startup without it")
 		}
 
 		By("creating manager namespace")
@@ -75,7 +75,7 @@ var _ = Describe("Manager", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred(), "Failed to install CRDs")
 
 		By("creating GitHub token secret for the controller")
-		err = utils.CreateGithubTokenSecret(namespace, os.Getenv("GITHUB_TOKEN"))
+		err = utils.CreateGithubTokenSecret(namespace, os.Getenv("GH_TOKEN"))
 		Expect(err).NotTo(HaveOccurred(), "Failed to create GitHub token secret")
 
 		By("deploying the controller-manager")

@@ -88,8 +88,8 @@ setup-test-e2e: ## Set up a Kind cluster for e2e tests if it does not exist
 	esac
 
 .PHONY: test-e2e
-test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expected an isolated environment using Kind. Requires GITHUB_TOKEN.
-	@if [ -z "$$GITHUB_TOKEN" ]; then echo "GITHUB_TOKEN must be set to run e2e tests"; exit 1; fi
+test-e2e: setup-test-e2e manifests generate fmt vet ## Run the e2e tests. Expected an isolated environment using Kind. Requires GH_TOKEN.
+	@if [ -z "$$GH_TOKEN" ]; then echo "GH_TOKEN must be set to run e2e tests"; exit 1; fi
 	CERT_MANAGER_INSTALL_SKIP=$(CERT_MANAGER_INSTALL_SKIP) KIND=$(KIND) KIND_CLUSTER=$(KIND_CLUSTER) go test -tags=e2e ./test/e2e/ -v -ginkgo.v -timeout 30m
 	$(MAKE) cleanup-test-e2e
 

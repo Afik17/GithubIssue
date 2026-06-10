@@ -44,7 +44,7 @@ func warnError(err error) {
 // CreateGithubTokenSecret creates or updates the controller GitHub token secret.
 func CreateGithubTokenSecret(namespace, token string) error {
 	cmd := exec.Command("kubectl", "create", "secret", "generic", "github-token",
-		fmt.Sprintf("--from-literal=GITHUB_TOKEN=%s", token),
+		fmt.Sprintf("--from-literal=GH_TOKEN=%s", token),
 		"-n", namespace,
 		"--dry-run=client", "-o", "yaml",
 	)

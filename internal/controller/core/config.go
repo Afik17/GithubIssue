@@ -8,10 +8,10 @@ import (
 )
 
 func LoadGitHubToken(logger logr.Logger) (string, error) {
-	githubToken, foundEnv := os.LookupEnv("GITHUB_TOKEN")
+	githubToken, foundEnv := os.LookupEnv("GH_TOKEN")
 	if !foundEnv {
-		logger.Info("GITHUB_TOKEN env not set")
-		return "", fmt.Errorf("GITHUB_TOKEN environment variable is not set")
+		logger.Info("GH_TOKEN env not set")
+		return "", fmt.Errorf("GH_TOKEN environment variable is not set")
 	}
 	return githubToken, nil
 }

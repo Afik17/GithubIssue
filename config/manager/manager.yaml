@@ -66,11 +66,11 @@ spec:
         image: controller:latest
         name: manager
         env:
-        - name: GITHUB_TOKEN
+        - name: GH_TOKEN
           valueFrom:
             secretKeyRef:
               name: github-token
-              key: GITHUB_TOKEN
+              key: GH_TOKEN
         ports:
         - containerPort: 8081
           name: health
