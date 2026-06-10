@@ -82,8 +82,8 @@ func (c *GitHubManager) GetIssueByNumber(ctx context.Context, owner, repo string
 
 func (c *GitHubManager) CreateIssue(ctx context.Context, owner, repo string, issue *Issue) (*Issue, error) {
 	req := &github.IssueRequest{
-		Title:     github.String(issue.Title),
-		Body:      github.String(issue.Description),
+		Title:     github.Ptr(issue.Title),
+		Body:      github.Ptr(issue.Description),
 		Labels:    &issue.Labels,
 		Assignees: &issue.Assignees,
 	}
@@ -97,11 +97,11 @@ func (c *GitHubManager) CreateIssue(ctx context.Context, owner, repo string, iss
 
 func (c *GitHubManager) EditIssue(ctx context.Context, owner, repo string, number int, issue *Issue) (*Issue, error) {
 	req := &github.IssueRequest{
-		Title:     github.String(issue.Title),
-		Body:      github.String(issue.Description),
+		Title:     github.Ptr(issue.Title),
+		Body:      github.Ptr(issue.Description),
 		Labels:    &issue.Labels,
 		Assignees: &issue.Assignees,
-		State:     github.String(issue.State),
+		State:     github.Ptr(issue.State),
 	}
 
 	edited, _, err := c.ghClient.Issues.Edit(ctx, owner, repo, number, req)
@@ -112,7 +112,7 @@ func (c *GitHubManager) EditIssue(ctx context.Context, owner, repo string, numbe
 }
 
 func (c *GitHubManager) CloseIssue(ctx context.Context, owner, repo string, number int) error {
-	req := &github.IssueRequest{State: github.String("closed")}
+	req := &github.IssueRequest{State: github.Ptr("closed")}
 	_, resp, err := c.ghClient.Issues.Edit(ctx, owner, repo, number, req)
 
 	if resp != nil && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusGone) {

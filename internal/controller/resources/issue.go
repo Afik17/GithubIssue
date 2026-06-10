@@ -112,9 +112,6 @@ func isGithubIssuesEqual(ghIssue *githubissuev1alpha1.GithubIssue, existingIssue
 	// Compare Description
 	existingDescription := strings.ReplaceAll(existingIssue.Description, "\r\n", "\n")
 	newDescription := strings.ReplaceAll(ghIssue.Spec.Description, "\r\n", "\n")
-	if existingDescription != newDescription {
-		return false
-	}
 
-	return true
+	return existingDescription != newDescription
 }

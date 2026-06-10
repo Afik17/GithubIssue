@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 )
 
@@ -15,16 +16,7 @@ func ParseRepoURL(repoURL string) (string, string, error) {
 		return "", "", err
 	}
 
-	// You must manually loop through the slice to find a match
-	isValid := false
-	for _, p := range supportedProtocols {
-		if u.Scheme == p {
-			isValid = true
-			break
-		}
-	}
-
-	if !isValid {
+	if !slices.Contains(supportedProtocols, u.Scheme) {
 		return "", "", fmt.Errorf("unsupported protocol %q", u.Scheme)
 	}
 
