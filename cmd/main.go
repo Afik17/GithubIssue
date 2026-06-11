@@ -3,8 +3,9 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"k8s.io/utils/ptr"
 	"os"
+
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 
 	"github.com/Afik17/GithubIssue/internal/controller/core"
@@ -184,7 +185,7 @@ func main() {
 	if err := (&controller.GithubIssueReconciler{
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
-		Recorder:      mgr.GetEventRecorderFor("githubissue-controller"),
+		Recorder:      mgr.GetEventRecorder("githubissue-controller"),
 		GithubManager: ghManager,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "githubissue")

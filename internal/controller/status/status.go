@@ -11,7 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 
 	githubissuev1alpha1 "github.com/Afik17/GithubIssue/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -21,7 +21,7 @@ import (
 func UpdateStatus(
 	ctx context.Context,
 	k8sClient client.Client,
-	recorder record.EventRecorder,
+	recorder events.EventRecorder,
 	ghIssue *githubissuev1alpha1.GithubIssue,
 	appliedIssue *gh.Issue,
 	syncErr error,
@@ -40,7 +40,7 @@ func UpdateStatus(
 	return nil
 }
 
-func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1alpha1.GithubIssue, appliedIssue *gh.Issue) {
+func setSuccessSyncStatus(recorder events.EventRecorder, ghIssue *githubissuev1alpha1.GithubIssue, appliedIssue *gh.Issue) {
 	ghIssue.Status.Number = appliedIssue.Number
 
 	meta.SetStatusCondition(&ghIssue.Status.Conditions, metav1.Condition{
@@ -51,7 +51,7 @@ func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1a
 	})
 
 	if appliedIssue.State == core.IssueOpenState {
-		recorder.Eventf(ghIssue, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonIssueFound, "GitHub issue #%d is open", appliedIssue.Number)
+		recorder.Eventf(ghIssue, nil, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonIssueFound, "Synced", "GitHub issue #%d is open", appliedIssue.Number)
 		meta.SetStatusCondition(&ghIssue.Status.Conditions, metav1.Condition{
 			Type:    githubissuev1alpha1.ConditionTypeIssueOpen,
 			Status:  metav1.ConditionTrue,
@@ -59,7 +59,7 @@ func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1a
 			Message: githubissuev1alpha1.ConditionMsgIssueOpen,
 		})
 	} else {
-		recorder.Eventf(ghIssue, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonIssueClosed, "GitHub issue #%d is closed", appliedIssue.Number)
+		recorder.Eventf(ghIssue, nil, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonIssueClosed, "Closed", "GitHub issue #%d is closed", appliedIssue.Number)
 		meta.SetStatusCondition(&ghIssue.Status.Conditions, metav1.Condition{
 			Type:    githubissuev1alpha1.ConditionTypeIssueOpen,
 			Status:  metav1.ConditionFalse,
@@ -69,7 +69,7 @@ func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1a
 	}
 
 	if appliedIssue.HasPR {
-		recorder.Eventf(ghIssue, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonPRFound, "A pull request is linked to GitHub issue #%d", appliedIssue.Number)
+		recorder.Eventf(ghIssue, nil, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonPRFound, "Checked", "A pull request is linked to GitHub issue #%d", appliedIssue.Number)
 		meta.SetStatusCondition(&ghIssue.Status.Conditions, metav1.Condition{
 			Type:    githubissuev1alpha1.ConditionTypeIssueHasPR,
 			Status:  metav1.ConditionTrue,
@@ -77,7 +77,7 @@ func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1a
 			Message: githubissuev1alpha1.ConditionMsgPRLinked,
 		})
 	} else {
-		recorder.Eventf(ghIssue, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonPRNotFound, "No pull request is linked to GitHub issue #%d", appliedIssue.Number)
+		recorder.Eventf(ghIssue, nil, corev1.EventTypeNormal, githubissuev1alpha1.ConditionReasonPRNotFound, "Checked", "No pull request is linked to GitHub issue #%d", appliedIssue.Number)
 		meta.SetStatusCondition(&ghIssue.Status.Conditions, metav1.Condition{
 			Type:    githubissuev1alpha1.ConditionTypeIssueHasPR,
 			Status:  metav1.ConditionFalse,
@@ -87,8 +87,8 @@ func setSuccessSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1a
 	}
 }
 
-func setFailedSyncStatus(recorder record.EventRecorder, ghIssue *githubissuev1alpha1.GithubIssue, syncErr error) {
-	recorder.Eventf(ghIssue, corev1.EventTypeWarning, "GitHubError", "Failed to sync issue:%v", syncErr)
+func setFailedSyncStatus(recorder events.EventRecorder, ghIssue *githubissuev1alpha1.GithubIssue, syncErr error) {
+	recorder.Eventf(ghIssue, nil, corev1.EventTypeWarning, "SyncedErr", "GitHubError", "Failed to sync issue:%v", syncErr)
 
 	reason := githubissuev1alpha1.ConditionReasonSyncErr
 	var ghSyncErr *gh.GitHubError
