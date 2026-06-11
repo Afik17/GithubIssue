@@ -242,6 +242,12 @@ var _ = Describe("GithubIssue Controller", func() {
 
 			ghIssue := newTestGithubIssue(resourceName)
 			ghIssue.Finalizers = []string{core.GHIssueDeletionFinalizer}
+
+			if ghIssue.Annotations == nil {
+				ghIssue.Annotations = make(map[string]string)
+			}
+			ghIssue.Annotations[core.AnnotationIssueNumber] = "11"
+
 			Expect(k8sClient.Create(testCtx, ghIssue)).To(Succeed())
 
 			ghIssue.Status.Number = 11

@@ -13,10 +13,10 @@ import (
 	githubissuev1alpha1 "github.com/Afik17/GithubIssue/api/v1alpha1"
 )
 
-// Update ensures the GitHub issue exists and is synchronized with the GithubIssue spec.
+// UpdateGithubIssue ensures the GitHub issue exists and is synchronized with the GithubIssue spec.
 // It handles both creation and updates of the GitHub issue. If the issue already exists, it will be updated to match the spec.
 // After applying the issue, it ensures that the GithubIssue resource has the correct issue number annotation.
-func Update(ctx context.Context, k8sClient client.Client, ghClient gh.IGitHub, ghIssue *githubissuev1alpha1.GithubIssue, repoOwner, repoName string, issueNumberByAnnotation int) (*gh.Issue, error) {
+func UpdateGithubIssue(ctx context.Context, k8sClient client.Client, ghClient gh.IGitHub, ghIssue *githubissuev1alpha1.GithubIssue, repoOwner, repoName string, issueNumberByAnnotation int) (*gh.Issue, error) {
 	var existingIssue *gh.Issue
 	var err error
 
