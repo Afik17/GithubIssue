@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-logr/logr"
-
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -28,7 +26,7 @@ import (
 type GithubIssueReconciler struct {
 	client.Client
 	Scheme        *runtime.Scheme
-	Recorder      record.EventRecorder
+	Recorder      events.EventRecorder
 	GithubManager gh.IGitHub
 }
 
@@ -71,7 +69,7 @@ func (r *GithubIssueReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	issueNumberByAnnotation := resources.GetGithubIssueNumberByAnnotation(ctx, ghIssue)
 	appliedIssue, syncErr := handlers.Update(ctx, r.Client, r.GithubManager, ghIssue, repoOwner, repoName, issueNumberByAnnotation)
 	if syncErr != nil {
-		return r.handleSyncError(ctx, logger, ghIssue, appliedIssue, syncErr)
+		return r.handleSyncError(ctx, ghIssue, appliedIssue, syncErr)
 	}
 
 	if issueNumberByAnnotation != appliedIssue.Number {
@@ -96,7 +94,9 @@ func (r *GithubIssueReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 }
 
 // handleSyncError processes sync errors and updates the K8s status
-func (r *GithubIssueReconciler) handleSyncError(ctx context.Context, logger logr.Logger, ghIssue *githubissuev1alpha1.GithubIssue, appliedIssue *gh.Issue, syncErr error) (ctrl.Result, error) {
+func (r *GithubIssueReconciler) handleSyncError(ctx context.Context, ghIssue *githubissuev1alpha1.GithubIssue, appliedIssue *gh.Issue, syncErr error) (ctrl.Result, error) {
+	logger := logf.FromContext(ctx)
+
 	if err := status.UpdateStatus(ctx, r.Client, r.Recorder, ghIssue, appliedIssue, syncErr); err != nil {
 		logger.Error(err, "failed to update GithubIssue status")
 		return ctrl.Result{}, err
