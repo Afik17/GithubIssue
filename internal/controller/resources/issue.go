@@ -82,7 +82,7 @@ func IsGithubIssueManaged(ctx context.Context, ghIssue *githubissuev1alpha1.Gith
 // isGithubIssuesEqual compares the K8s Spec to the internal domain issue.
 func isGithubIssuesEqual(ghIssue *githubissuev1alpha1.GithubIssue, existingIssue *gh.Issue) bool {
 
-	// Compare states
+	// If the existing github issue state is not open, it needs to be synced
 	if existingIssue.State != core.IssueOpenState {
 		return false
 	}
@@ -113,5 +113,5 @@ func isGithubIssuesEqual(ghIssue *githubissuev1alpha1.GithubIssue, existingIssue
 	existingDescription := strings.ReplaceAll(existingIssue.Description, "\r\n", "\n")
 	newDescription := strings.ReplaceAll(ghIssue.Spec.Description, "\r\n", "\n")
 
-	return existingDescription != newDescription
+	return existingDescription == newDescription
 }
