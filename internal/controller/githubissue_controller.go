@@ -42,7 +42,7 @@ func (r *GithubIssueReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	ghIssue := &githubissuev1alpha1.GithubIssue{}
 	if err := r.Get(ctx, req.NamespacedName, ghIssue); err != nil {
-		logger.Info("unable to fetch GithubIssue %s: %w", ghIssue.Name, err)
+		logger.Info("unable to fetch GithubIssue", "name", ghIssue.Name, "error", err)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
