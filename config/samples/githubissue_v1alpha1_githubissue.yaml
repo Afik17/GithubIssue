@@ -1,0 +1,15 @@
+apiVersion: githubissue.dana.io/v1alpha1
+kind: GithubIssue
+metadata:
+  labels:
+    app.kubernetes.io/name: githubissue
+    app.kubernetes.io/managed-by: kustomize
+  name: anothertest
+spec:
+  repo: https://github.com/Afik17/test.git
+  title: anothertest
+  description: this is my new issue
+  labels:
+    - test
+  assignees:
+    - Afik17
